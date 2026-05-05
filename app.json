@@ -39,7 +39,21 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Brewport to attach cafe photos from your library.",
+          "cameraPermission": "Allow Brewport to take photos for your coffee stamps."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Brewport to save cafe locations on your map."
+        }
+      ],
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,
