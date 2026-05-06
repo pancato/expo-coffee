@@ -22,8 +22,8 @@ export function HapticPressable({
   return (
     <Pressable
       {...props}
-      onPress={async (event) => {
-        await playHaptic(haptic);
+      onPress={(event) => {
+        void playHaptic(haptic);
         onPress?.(event);
       }}
     >

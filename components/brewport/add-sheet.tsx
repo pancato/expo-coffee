@@ -13,22 +13,22 @@ export function AddSheet({
   language,
   colors,
   onClose,
+  onDismiss,
   onCamera,
   onGallery,
-  onManual,
 }: {
   visible: boolean;
   language: Language;
   colors: Palette;
   onClose: () => void;
+  onDismiss?: () => void;
   onCamera: () => void;
   onGallery: () => void;
-  onManual: () => void;
 }) {
   const insets = useSafeAreaInsets();
 
   return (
-    <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
+    <Modal animationType="fade" transparent visible={visible} onDismiss={onDismiss} onRequestClose={onClose}>
       <BlurView intensity={42} tint="light" style={{ flex: 1 }}>
         <Pressable
           accessibilityRole="button"
@@ -40,7 +40,7 @@ export function AddSheet({
           <View style={{ gap: 12, paddingBottom: insets.bottom + 28 }}>
           <ActionRow icon="camera" label={i18n[language].takePhoto} colors={colors} language={language} onPress={onCamera} />
           <ActionRow icon="image" label={i18n[language].gallery} colors={colors} language={language} onPress={onGallery} />
-          <ActionRow icon="edit" label={i18n[language].manual} colors={colors} language={language} onPress={onManual} />
+
             <View style={{ alignItems: "flex-end", paddingTop: 4 }}>
               <CircleButton icon="x" label={i18n[language].close} colors={colors} onPress={onClose} haptic="light" />
             </View>

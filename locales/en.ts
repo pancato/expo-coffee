@@ -15,7 +15,7 @@ export const en = {
   empty: "A clean square. Add a cup, a shop, or anything worth collecting.",
   takePhoto: "Take Photo",
   gallery: "Upload from Gallery",
-  manual: "Manual Entry",
+
   close: "Close",
   newStamp: "Add Brew",
   save: "Save Stamp",
@@ -48,4 +48,3 @@ export const en = {
   unknownCity: "Unknown City",
   coffee: "Coffee",
 };
-

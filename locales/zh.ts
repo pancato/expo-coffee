@@ -12,10 +12,11 @@ export const zh = {
   cities: "座城市",
   recent: "选中日期",
   todayAction: "今天",
-  empty: "今天还是一张干净的格子，记下一杯咖啡、一家店，或者任何值得收藏的东西。",
+  empty:
+    "今天还是一张干净的格子，记下一杯咖啡、一家店，或者任何值得收藏的东西。",
   takePhoto: "拍照",
   gallery: "从图库上传",
-  manual: "手动记录",
+
   close: "关闭",
   newStamp: "添加记录",
   save: "保存印章",
@@ -48,4 +49,3 @@ export const zh = {
   unknownCity: "未知城市",
   coffee: "咖啡",
 };
-
