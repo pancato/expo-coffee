@@ -81,11 +81,7 @@ function waitForNativeTransition(delayMs = 260): Promise<void> {
   });
 }
 
-function debugPickerFlow(step: string, details?: unknown) {
-  if (__DEV__) {
-    console.info("[Brewport:image-picker]", step, details ?? "");
-  }
-}
+
 
 export function BrewportApp({ view }: { view: ViewName }) {
   const [fontsLoaded] = useFonts({
@@ -164,7 +160,7 @@ export function BrewportApp({ view }: { view: ViewName }) {
   }
 
   function openEditor(photoUri?: string) {
-    debugPickerFlow("open-editor", { hasPhoto: Boolean(photoUri) });
+
     const now = new Date();
     const nextDraft = emptyDraft(photoUri);
     if (autoLocationTimer.current) clearTimeout(autoLocationTimer.current);
@@ -180,7 +176,7 @@ export function BrewportApp({ view }: { view: ViewName }) {
   }
 
   async function openEditorAfterPicker(photoUri: string) {
-    debugPickerFlow("picker-returned-waiting-for-editor");
+
     await waitForNativeTransition(180);
     openEditor(photoUri);
     void playHaptic("success");
@@ -188,13 +184,13 @@ export function BrewportApp({ view }: { view: ViewName }) {
 
   function queueAddAction(action: AddAction) {
     if (addActionBusy.current) {
-      debugPickerFlow("ignored-busy-action", action);
+
       return;
     }
 
     addActionBusy.current = true;
     pendingAddAction.current = action;
-    debugPickerFlow("queue-add-action", action);
+
     setAddOpen(false);
 
     setTimeout(() => {
@@ -207,7 +203,7 @@ export function BrewportApp({ view }: { view: ViewName }) {
     if (!action) return;
 
     pendingAddAction.current = undefined;
-    debugPickerFlow("run-pending-add-action", { action, source });
+
 
     try {
 
@@ -287,7 +283,7 @@ export function BrewportApp({ view }: { view: ViewName }) {
   async function takePhoto() {
     await waitForNativeTransition(80);
 
-    debugPickerFlow("take-photo-request-permission");
+
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
       await playHaptic("warning");
@@ -296,22 +292,21 @@ export function BrewportApp({ view }: { view: ViewName }) {
     }
 
     await playHaptic("medium");
-    debugPickerFlow("take-photo-launch-camera");
+
     let result: ImagePicker.ImagePickerResult;
     try {
       result = await ImagePicker.launchCameraAsync({
         mediaTypes: ["images"],
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.84,
+        allowsEditing: false,
+        quality: 0.92,
       });
     } catch (error) {
-      debugPickerFlow("take-photo-error", error);
+
       Alert.alert(i18n[language].permission, i18n[language].cameraPermission);
       return;
     }
 
-    debugPickerFlow("take-photo-result", { canceled: result.canceled });
+
     if (!result.canceled && result.assets[0]) {
       await openEditorAfterPicker(result.assets[0].uri);
     }
@@ -320,7 +315,7 @@ export function BrewportApp({ view }: { view: ViewName }) {
   async function pickGallery() {
     await waitForNativeTransition(80);
 
-    debugPickerFlow("gallery-request-permission");
+
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
       await playHaptic("warning");
@@ -329,22 +324,21 @@ export function BrewportApp({ view }: { view: ViewName }) {
     }
 
     await playHaptic("medium");
-    debugPickerFlow("gallery-launch-library");
+
     let result: ImagePicker.ImagePickerResult;
     try {
       result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.84,
+        allowsEditing: false,
+        quality: 0.92,
       });
     } catch (error) {
-      debugPickerFlow("gallery-error", error);
+
       Alert.alert(i18n[language].permission, i18n[language].galleryPermission);
       return;
     }
 
-    debugPickerFlow("gallery-result", { canceled: result.canceled });
+
     if (!result.canceled && result.assets[0]) {
       await openEditorAfterPicker(result.assets[0].uri);
     }
@@ -377,6 +371,7 @@ export function BrewportApp({ view }: { view: ViewName }) {
     };
 
     persist([next, ...entries]);
+    setDroppingEntryId(next.id);
     writeStored(storageKeys.lastDrop, next.id);
     setEditorOpen(false);
     router.push("/journal");

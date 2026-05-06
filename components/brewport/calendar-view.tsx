@@ -151,13 +151,18 @@ export function CalendarView({
                       alignItems: "center",
                       justifyContent: "center",
                       backgroundColor: selected ? colors.accent : hasEntry ? colors.accentSoft : colors.recessed,
-                      borderWidth: isToday && !selected ? 1.5 : 0,
-                      borderColor: colors.accent,
+                      borderWidth: 1.5,
+                      borderColor: isToday && !selected ? colors.accent : "transparent",
                     }}
                   >
                     <Text
                       selectable
                       style={{
+                        position: "absolute",
+                        top: Math.max(5, tile * 0.12),
+                        left: 0,
+                        right: 0,
+                        textAlign: "center",
                         color: selected ? colors.raised : colors.text,
                         fontFamily: monoFont(language),
                         fontSize: Math.max(12, tile * 0.31),
@@ -223,26 +228,36 @@ function DayStickerStack({
   droppingEntryId?: string;
   onDropComplete: () => void;
 }) {
-  const visible = entries.filter((entry) => entry.stickerUri || entry.photoUri).slice(0, 3);
+  const visible = useMemo(() => entries.filter((entry) => entry.stickerUri || entry.photoUri).slice(0, 3), [entries]);
+  const visibleKey = useMemo(() => visible.map((entry) => entry.id).join("|"), [visible]);
   const newest = visible[0];
-  const shouldDrop = Boolean(newest && newest.id === droppingEntryId);
-  const drop = useRef(new Animated.Value(shouldDrop ? -90 : 0)).current;
+  const shouldDrop = Boolean(droppingEntryId && visible.some((entry) => entry.id === droppingEntryId));
+  const drops = useRef<Animated.Value[]>([]);
+
+  if (drops.current.length !== visible.length) {
+    drops.current = visible.map((_, index) => drops.current[index] ?? new Animated.Value(0));
+  }
 
   useEffect(() => {
     if (!shouldDrop) return;
 
-    drop.setValue(-90);
-    Animated.spring(drop, {
-      toValue: 0,
-      damping: 9,
-      stiffness: 150,
-      mass: 0.6,
-      useNativeDriver: true,
-    }).start(() => {
+    drops.current.forEach((drop, index) => drop.setValue(-150 - index * 34));
+    Animated.stagger(
+      120,
+      drops.current.map((drop) =>
+        Animated.spring(drop, {
+          toValue: 0,
+          damping: 9,
+          stiffness: 148,
+          mass: 0.62,
+          useNativeDriver: true,
+        }),
+      ),
+    ).start(() => {
       void playHaptic("success");
       onDropComplete();
     });
-  }, [drop, onDropComplete, shouldDrop]);
+  }, [onDropComplete, shouldDrop, visibleKey]);
 
   if (!newest) {
     return (
@@ -260,7 +275,7 @@ function DayStickerStack({
   }
 
   return (
-    <View pointerEvents="none" style={{ position: "absolute", left: 4, right: 4, bottom: 3, top: size * 0.38 }}>
+    <View pointerEvents="none" style={{ position: "absolute", left: 0, right: 0, bottom: 0, top: 0 }}>
       {visible
         .slice()
         .reverse()
@@ -268,54 +283,35 @@ function DayStickerStack({
           const visualIndex = visible.length - 1 - reverseIndex;
           const uri = entry.stickerUri || entry.photoUri;
           if (!uri) return null;
-          const image = (
-            <View
+          const stickerSize = size * 0.42;
+          const drop = drops.current[visualIndex] ?? new Animated.Value(0);
+
+          return (
+            <Animated.View
               key={entry.id}
               style={{
                 position: "absolute",
-                left: size * 0.1 + visualIndex * 3,
-                bottom: visualIndex * 3,
-                width: size * 0.42,
-                height: size * 0.42,
-                borderRadius: size * 0.12,
-                padding: 2,
-                backgroundColor: "#FFFFFF",
-                transform: [{ rotate: `${visualIndex % 2 ? 8 : -8}deg` }],
-                boxShadow: `0 2px 5px ${colors.shadow}`,
+                left: size * 0.11 + visualIndex * 3,
+                bottom: size * 0.08 + visualIndex * 3,
+                width: stickerSize,
+                height: stickerSize,
+                transform: [{ translateY: shouldDrop ? drop : 0 }, { rotate: `${visualIndex % 2 ? 8 : -8}deg` }],
               }}
             >
-              <Image source={{ uri }} contentFit="cover" style={{ flex: 1, borderRadius: size * 0.09 }} />
-            </View>
-          );
-
-          if (entry.id !== droppingEntryId) return image;
-
-          return (
-            <Animated.View key={entry.id} style={{ transform: [{ translateY: drop }] }}>
-              {image}
+              <View
+                style={{
+                  flex: 1,
+                  borderRadius: size * 0.12,
+                  padding: 2,
+                  backgroundColor: "#FFFFFF",
+                  boxShadow: `0 2px 5px ${colors.shadow}`,
+                }}
+              >
+                <Image source={{ uri }} contentFit="contain" style={{ flex: 1, borderRadius: size * 0.09 }} />
+              </View>
             </Animated.View>
           );
         })}
-      {entries.length > 1 ? (
-        <View
-          style={{
-            position: "absolute",
-            right: 0,
-            top: -2,
-            minWidth: 19,
-            height: 19,
-            borderRadius: 10,
-            paddingHorizontal: 4,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: colors.accent,
-          }}
-        >
-          <Text selectable style={{ color: colors.raised, fontSize: 11, fontWeight: "900" }}>
-            {entries.length}
-          </Text>
-        </View>
-      ) : null}
     </View>
   );
 }

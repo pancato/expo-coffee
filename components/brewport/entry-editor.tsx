@@ -1,3 +1,4 @@
+import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
 import { ImageBackground, KeyboardAvoidingView, Modal, Platform, ScrollView, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -37,6 +38,7 @@ export function EntryEditor({
   onLocation: () => void;
 }) {
   const insets = useSafeAreaInsets();
+  const headerHeight = 88;
 
   function selectShop(shop: ShopCandidate) {
     setDraft({
@@ -75,9 +77,17 @@ export function EntryEditor({
                 borderColor: "rgba(255,255,255,0.7)",
               }}
             >
-          <ScrollView
-            contentContainerStyle={{
-              paddingTop: 26,
+              <EditorHeader
+                language={language}
+                colors={colors}
+                muted={!draft.photoUri && !draft.item && !draft.shop}
+                onClose={onClose}
+                onSave={onSave}
+                height={headerHeight}
+              />
+              <ScrollView
+                contentContainerStyle={{
+              paddingTop: headerHeight + 20,
               paddingHorizontal: 18,
               paddingBottom: insets.bottom + 32,
               gap: 14,
@@ -85,14 +95,6 @@ export function EntryEditor({
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <View style={{ minHeight: 54, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-              <RoundAction icon="x" colors={colors} onPress={onClose} />
-              <Text selectable style={{ color: colors.text, fontFamily: titleFont(language), fontSize: 29, fontWeight: "900" }}>
-                {i18n[language].newStamp}
-              </Text>
-              <RoundAction icon="check" colors={colors} muted={!draft.photoUri && !draft.item && !draft.shop} onPress={onSave} />
-            </View>
-
             <View style={{ height: 248, alignItems: "center", justifyContent: "center" }}>
               {draft.photoUri ? (
                 <StickerPreview uri={draft.photoUri} colors={colors} language={language} onRemove={() => setDraft({ ...draft, photoUri: undefined })} />
@@ -168,6 +170,58 @@ export function EntryEditor({
         </KeyboardAvoidingView>
       </View>
     </Modal>
+  );
+}
+
+function EditorHeader({
+  language,
+  colors,
+  muted,
+  onClose,
+  onSave,
+  height,
+}: {
+  language: Language;
+  colors: Palette;
+  muted: boolean;
+  onClose: () => void;
+  onSave: () => void;
+  height: number;
+}) {
+  return (
+    <BlurView
+      intensity={34}
+      tint="light"
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        height,
+        zIndex: 20,
+        overflow: "hidden",
+        borderBottomWidth: 1,
+        borderBottomColor: colors.hairline,
+        backgroundColor: "rgba(255,253,247,0.34)",
+      }}
+    >
+      <View
+        style={{
+          flex: 1,
+          paddingHorizontal: 18,
+          paddingTop: 14,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <RoundAction icon="x" colors={colors} onPress={onClose} />
+        <Text selectable style={{ color: colors.text, fontFamily: titleFont(language), fontSize: 29, fontWeight: "900" }}>
+          {i18n[language].newStamp}
+        </Text>
+        <RoundAction icon="check" colors={colors} muted={muted} onPress={onSave} />
+      </View>
+    </BlurView>
   );
 }
 
@@ -248,7 +302,7 @@ function StickerPreview({
           transform: [{ rotate: "8deg" }],
         }}
       >
-        <Image source={{ uri }} contentFit="cover" style={{ flex: 1, borderRadius: 34, backgroundColor: colors.recessed }} />
+        <Image source={{ uri }} contentFit="contain" style={{ flex: 1, borderRadius: 34, backgroundColor: colors.recessed }} />
       </View>
       <HapticPressable
         haptic="light"
