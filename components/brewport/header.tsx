@@ -1,6 +1,6 @@
 import { Text, View } from "react-native";
 
-import { i18n } from "./constants";
+import { i18n } from "../../locales";
 import { formatDate } from "./date-utils";
 import { bodyFont, titleFont } from "./typography";
 import type { Language, Palette, ViewName } from "./types";
@@ -12,12 +12,16 @@ export function Header({
   colors,
   onSettings,
   onMap,
+  onPassportAction,
+  passportCompact,
 }: {
   view: ViewName;
   language: Language;
   colors: Palette;
   onSettings: () => void;
   onMap: () => void;
+  onPassportAction: () => void;
+  passportCompact: boolean;
 }) {
   const title = view === "journal" ? i18n[language].today : i18n[language].allStamps;
   const subtitle = view === "journal" ? formatDate(new Date(), language) : i18n[language].passport;
@@ -32,7 +36,12 @@ export function Header({
       }}
     >
       <View style={{ flexDirection: "row", alignItems: "center" }}>
-        <CircleButton icon={view === "journal" ? "settings" : "grid"} label={i18n[language].settings} onPress={onSettings} colors={colors} />
+        <CircleButton
+          icon={view === "journal" ? "gear" : passportCompact ? "stamp" : "grid"}
+          label={view === "journal" ? i18n[language].settings : i18n[language].toggleLayout}
+          onPress={view === "journal" ? onSettings : onPassportAction}
+          colors={colors}
+        />
         <View style={{ flex: 1, alignItems: "center", paddingHorizontal: 10, gap: 3 }}>
           <Text
             selectable
@@ -67,7 +76,7 @@ export function Header({
             {subtitle}
           </Text>
         </View>
-        <CircleButton icon={view === "journal" ? "user" : "map"} label={i18n[language].map} onPress={onMap} colors={colors} />
+        {view === "passport" ? <CircleButton icon="map" label={i18n[language].map} onPress={onMap} colors={colors} /> : <View style={{ width: 52, height: 52 }} />}
       </View>
     </View>
   );

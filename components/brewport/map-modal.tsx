@@ -1,9 +1,9 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Modal, Text, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { i18n } from "./constants";
+import { i18n } from "../../locales";
+import { AppIcon } from "./icons";
 import { titleFont } from "./typography";
 import type { BrewEntry, Language, Palette } from "./types";
 import { CircleButton, shadow } from "./ui";
@@ -54,7 +54,7 @@ export function BrewMapModal({
                     boxShadow: shadow(colors, 10, 22),
                   }}
                 >
-                  <MaterialCommunityIcons name="coffee-outline" size={32} color={colors.stamp} />
+                  <AppIcon name="coffee" size={32} color={colors.stamp} weight="bold" />
                 </View>
                 <View
                   style={{

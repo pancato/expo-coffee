@@ -1,7 +1,7 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { Text, View } from "react-native";
 
+import { AppIcon } from "./icons";
 import { bodyFont } from "./typography";
 import type { BrewEntry, Language, Palette } from "./types";
 
@@ -33,7 +33,7 @@ export function LogCard({ entry, colors, language }: { entry: BrewEntry; colors:
             justifyContent: "center",
           }}
         >
-          <MaterialCommunityIcons name="coffee-outline" size={34} color={colors.accentDark} />
+          <AppIcon name="coffee" size={34} color={colors.accentDark} weight="bold" />
         </View>
       )}
       <View style={{ flex: 1, gap: 4, minWidth: 0 }}>

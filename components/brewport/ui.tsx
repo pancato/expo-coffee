@@ -1,8 +1,8 @@
-import { Feather } from "@expo/vector-icons";
-import type { ComponentProps, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Pressable, type PressableProps, Text, View } from "react-native";
 
 import { playHaptic, type HapticKind } from "./haptics";
+import { AppIcon, type IconName } from "./icons";
 import { bodyFont, titleFont } from "./typography";
 import type { Language, Palette } from "./types";
 
@@ -40,7 +40,7 @@ export function CircleButton({
   emphasized = false,
   haptic = "light",
 }: {
-  icon: ComponentProps<typeof Feather>["name"];
+  icon: IconName;
   label: string;
   onPress: () => void;
   colors: Palette;
@@ -65,7 +65,7 @@ export function CircleButton({
         boxShadow: shadow(colors, 8, 20),
       }}
     >
-      <Feather name={icon} size={emphasized ? 28 : 24} color={emphasized ? colors.raised : colors.muted} />
+      <AppIcon name={icon} size={emphasized ? 28 : 24} color={emphasized ? colors.raised : colors.muted} weight={emphasized ? "bold" : "regular"} />
     </HapticPressable>
   );
 }

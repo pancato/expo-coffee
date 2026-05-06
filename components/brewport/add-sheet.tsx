@@ -1,9 +1,9 @@
-import { Feather } from "@expo/vector-icons";
-import type { ComponentProps } from "react";
-import { Modal, Text, View } from "react-native";
+import { BlurView } from "expo-blur";
+import { Modal, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { i18n } from "./constants";
+import { i18n } from "../../locales";
+import { AppIcon, type IconName } from "./icons";
 import { titleFont } from "./typography";
 import type { Language, Palette } from "./types";
 import { CircleButton, HapticPressable } from "./ui";
@@ -29,16 +29,24 @@ export function AddSheet({
 
   return (
     <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
-      <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(36,31,28,0.24)", padding: 20 }}>
-        <View style={{ gap: 12, paddingBottom: insets.bottom + 28 }}>
+      <BlurView intensity={42} tint="light" style={{ flex: 1 }}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={i18n[language].close}
+          onPress={onClose}
+          style={{ position: "absolute", inset: 0, backgroundColor: "rgba(248,244,236,0.34)" }}
+        />
+        <View style={{ flex: 1, justifyContent: "flex-end", padding: 20 }}>
+          <View style={{ gap: 12, paddingBottom: insets.bottom + 28 }}>
           <ActionRow icon="camera" label={i18n[language].takePhoto} colors={colors} language={language} onPress={onCamera} />
           <ActionRow icon="image" label={i18n[language].gallery} colors={colors} language={language} onPress={onGallery} />
-          <ActionRow icon="edit-3" label={i18n[language].manual} colors={colors} language={language} onPress={onManual} />
-          <View style={{ alignItems: "flex-end", paddingTop: 4 }}>
-            <CircleButton icon="x" label={i18n[language].close} colors={colors} onPress={onClose} haptic="light" />
+          <ActionRow icon="edit" label={i18n[language].manual} colors={colors} language={language} onPress={onManual} />
+            <View style={{ alignItems: "flex-end", paddingTop: 4 }}>
+              <CircleButton icon="x" label={i18n[language].close} colors={colors} onPress={onClose} haptic="light" />
+            </View>
           </View>
         </View>
-      </View>
+      </BlurView>
     </Modal>
   );
 }
@@ -50,7 +58,7 @@ function ActionRow({
   language,
   onPress,
 }: {
-  icon: ComponentProps<typeof Feather>["name"];
+  icon: IconName;
   label: string;
   colors: Palette;
   language: Language;
@@ -82,7 +90,7 @@ function ActionRow({
           backgroundColor: colors.surface,
         }}
       >
-        <Feather name={icon} size={25} color={colors.accent} />
+        <AppIcon name={icon} size={25} color={colors.accent} weight="bold" />
       </View>
       <Text
         selectable
@@ -92,7 +100,7 @@ function ActionRow({
       >
         {label}
       </Text>
-      <Feather name="chevron-right" size={25} color={colors.quiet} />
+      <AppIcon name="chevron-right" size={25} color={colors.quiet} />
     </HapticPressable>
   );
 }

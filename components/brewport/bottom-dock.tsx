@@ -1,18 +1,18 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { View } from "react-native";
 
+import { AppIcon } from "./icons";
 import type { Palette, ViewName } from "./types";
 import { CircleButton, HapticPressable, shadow } from "./ui";
 
 export function BottomDock({
   view,
-  setView,
+  onNavigate,
   onAdd,
   colors,
   bottomOffset,
 }: {
   view: ViewName;
-  setView: (view: ViewName) => void;
+  onNavigate: (view: ViewName) => void;
   onAdd: () => void;
   colors: Palette;
   bottomOffset: number;
@@ -49,7 +49,7 @@ export function BottomDock({
                 key={item}
                 accessibilityRole="tab"
                 haptic={active ? "selection" : "light"}
-                onPress={() => setView(item)}
+                onPress={() => onNavigate(item)}
                 style={{
                   flex: 1,
                   borderRadius: 32,
@@ -58,10 +58,11 @@ export function BottomDock({
                   backgroundColor: active ? colors.recessed : "transparent",
                 }}
               >
-                <MaterialCommunityIcons
-                  name={item === "journal" ? "coffee-outline" : "stamper"}
+                <AppIcon
+                  name={item === "journal" ? "coffee" : "stamp"}
                   size={32}
                   color={active ? colors.accent : colors.muted}
+                  weight={active ? "bold" : "regular"}
                 />
               </HapticPressable>
             );

@@ -1,6 +1,7 @@
 import type { Language } from "./types";
 
 export const fontFamilies = {
+  display: "ZCOOLQingKeHuangYou_400Regular",
   regular: "NotoSansSC_400Regular",
   medium: "NotoSansSC_500Medium",
   semiBold: "NotoSansSC_600SemiBold",
@@ -10,7 +11,7 @@ export const fontFamilies = {
 
 export function titleFont(language: Language) {
   void language;
-  return fontFamilies.black;
+  return fontFamilies.display;
 }
 
 export function bodyFont(language: Language) {

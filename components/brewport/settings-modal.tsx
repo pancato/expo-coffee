@@ -1,9 +1,9 @@
-import { Feather } from "@expo/vector-icons";
-import type { ComponentProps } from "react";
 import { ImageBackground, Modal, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { i18n, palettes, paperTexture, storageKeys } from "./constants";
+import { i18n } from "../../locales";
+import { palettes, paperTexture, storageKeys } from "./constants";
+import { AppIcon, type IconName } from "./icons";
 import { writeStored } from "./storage";
 import { bodyFont, titleFont } from "./typography";
 import type { Language, Palette, ThemeName } from "./types";
@@ -102,9 +102,9 @@ export function SettingsModal({
                 })}
               </View>
             </View>
-            <SettingsRow icon="settings" label={i18n[language].general} colors={colors} language={language} />
-            <SettingsRow icon="file-text" label={i18n[language].privacy} colors={colors} language={language} />
-            <SettingsRow icon="thumbs-up" label={i18n[language].feedback} colors={colors} language={language} />
+            <SettingsRow icon="gear" label={i18n[language].general} colors={colors} language={language} />
+            <SettingsRow icon="note" label={i18n[language].privacy} colors={colors} language={language} />
+            <SettingsRow icon="star" label={i18n[language].feedback} colors={colors} language={language} />
             <Text selectable style={{ color: colors.quiet, textAlign: "center", fontFamily: bodyFont(language), paddingTop: 8 }}>
               {i18n[language].version}
             </Text>
@@ -121,7 +121,7 @@ function SettingsRow({
   colors,
   language,
 }: {
-  icon: ComponentProps<typeof Feather>["name"];
+  icon: IconName;
   label: string;
   colors: Palette;
   language: Language;
@@ -143,12 +143,12 @@ function SettingsRow({
       }}
     >
       <View style={{ width: 50, height: 50, borderRadius: 25, alignItems: "center", justifyContent: "center", backgroundColor: colors.recessed }}>
-        <Feather name={icon} size={23} color={colors.accent} />
+        <AppIcon name={icon} size={23} color={colors.accent} weight="bold" />
       </View>
       <Text selectable numberOfLines={1} adjustsFontSizeToFit style={{ flex: 1, color: colors.text, fontFamily: titleFont(language), fontSize: 20, fontWeight: "900" }}>
         {label}
       </Text>
-      <Feather name="chevron-right" size={24} color={colors.quiet} />
+      <AppIcon name="chevron-right" size={24} color={colors.quiet} />
     </HapticPressable>
   );
 }

@@ -1,11 +1,5 @@
-import { BrewportApp } from "@/components/brewport-app";
-import { StatusBar } from "expo-status-bar";
+import { Redirect } from "expo-router";
 
 export default function Index() {
-  return (
-    <>
-      <BrewportApp />
-      <StatusBar hidden />
-    </>
-  );
+  return <Redirect href="/journal" />;
 }

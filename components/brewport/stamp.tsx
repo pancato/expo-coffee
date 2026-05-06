@@ -9,11 +9,13 @@ export function Stamp({
   index,
   colors,
   language,
+  scale = 1,
 }: {
   entry: BrewEntry;
   index: number;
   colors: Palette;
   language: Language;
+  scale?: number;
 }) {
   const oval = index % 3 === 2;
 
@@ -28,7 +30,7 @@ export function Stamp({
         alignItems: "center",
         justifyContent: "center",
         paddingHorizontal: 12,
-        transform: [{ rotate: index % 2 ? "6deg" : "-7deg" }],
+        transform: [{ rotate: index % 2 ? "6deg" : "-7deg" }, { scale }],
         opacity: 0.94,
       }}
     >

@@ -1,26 +1,26 @@
-import { Feather } from "@expo/vector-icons";
 import { ScrollView, Text, View } from "react-native";
 
-import { i18n } from "./constants";
+import { i18n } from "../../locales";
 import { unique } from "./date-utils";
 import { Stamp } from "./stamp";
 import type { BrewEntry, Language, Palette } from "./types";
 import { titleFont } from "./typography";
-import { HapticPressable, shadow } from "./ui";
 
 export function PassportView({
   entries,
   language,
   colors,
-  onMap,
+  compact,
 }: {
   entries: BrewEntry[];
   language: Language;
   colors: Palette;
-  onMap: () => void;
+  compact: boolean;
 }) {
   const shops = unique(entries.map((entry) => entry.shop));
   const cities = unique(entries.map((entry) => entry.city));
+  const columnWidth = compact ? "33.333%" : "50%";
+  const slotHeight = compact ? 132 : 160;
 
   return (
     <ScrollView
@@ -62,13 +62,14 @@ export function PassportView({
         {entries.map((entry, index) => (
           <View
             key={entry.id}
-            style={{ width: "50%", alignItems: "center", height: 160 }}
+            style={{ width: columnWidth, alignItems: "center", height: slotHeight }}
           >
             <Stamp
               entry={entry}
               index={index}
               colors={colors}
               language={language}
+              scale={compact ? 0.78 : 1}
             />
           </View>
         ))}
@@ -77,17 +78,17 @@ export function PassportView({
             <View
               key={`ghost-${index}`}
               style={{
-                width: "50%",
+                width: columnWidth,
                 alignItems: "center",
-                height: 160,
+                height: slotHeight,
                 justifyContent: "center",
               }}
             >
               <View
                 style={{
-                  width: 122,
-                  height: 122,
-                  borderRadius: 61,
+                  width: compact ? 92 : 122,
+                  height: compact ? 92 : 122,
+                  borderRadius: compact ? 46 : 61,
                   borderWidth: 1,
                   borderStyle: "dashed",
                   borderColor: colors.quiet,
@@ -99,37 +100,6 @@ export function PassportView({
         )}
       </View>
 
-      <HapticPressable
-        haptic="light"
-        onPress={onMap}
-        style={{
-          minHeight: 72,
-          paddingHorizontal: 18,
-          borderRadius: 26,
-          backgroundColor: colors.surface,
-          borderWidth: 1,
-          borderColor: colors.hairline,
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 14,
-          boxShadow: shadow(colors, 14, 32),
-        }}
-      >
-        <Feather name="map" size={24} color={colors.accent} />
-        <Text
-          selectable
-          style={{
-            flex: 1,
-            color: colors.text,
-            fontSize: 17,
-            fontWeight: "900",
-            fontFamily: titleFont(language),
-          }}
-        >
-          {i18n[language].map}
-        </Text>
-        <Feather name="chevron-right" size={25} color={colors.quiet} />
-      </HapticPressable>
     </ScrollView>
   );
 }

@@ -13,6 +13,7 @@ export type BrewEntry = {
   note: string;
   rating: number;
   photoUri?: string;
+  stickerUri?: string;
   location?: {
     latitude: number;
     longitude: number;
@@ -20,6 +21,15 @@ export type BrewEntry = {
 };
 
 export type DraftEntry = Omit<BrewEntry, "id" | "dateISO">;
+
+export type ShopCandidate = {
+  id: string;
+  name: string;
+  city?: string;
+  latitude: number;
+  longitude: number;
+  distanceMeters?: number;
+};
 
 export type Palette = {
   label: string;

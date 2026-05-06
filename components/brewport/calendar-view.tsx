@@ -1,10 +1,12 @@
-import { useMemo } from "react";
-import { Feather } from "@expo/vector-icons";
-import { ScrollView, Text, View } from "react-native";
+import { useEffect, useMemo, useRef } from "react";
+import { Animated, ScrollView, Text, View } from "react-native";
+import { Image } from "expo-image";
 
-import { i18n, weekdayLabels } from "./constants";
+import { i18n, weekdayLabels } from "../../locales";
 import { addMonths, dateForDay, formatDate, formatMonth, monthCells, toISODate } from "./date-utils";
 import { LogCard } from "./log-card";
+import { AppIcon } from "./icons";
+import { playHaptic } from "./haptics";
 import { bodyFont, monoFont, titleFont } from "./typography";
 import type { BrewEntry, Language, Palette } from "./types";
 import { HapticPressable, SectionTitle, shadow } from "./ui";
@@ -18,6 +20,8 @@ export function CalendarView({
   language,
   colors,
   width,
+  droppingEntryId,
+  onDropComplete,
 }: {
   entries: BrewEntry[];
   calendarMonth: Date;
@@ -27,6 +31,8 @@ export function CalendarView({
   language: Language;
   colors: Palette;
   width: number;
+  droppingEntryId?: string;
+  onDropComplete: () => void;
 }) {
   const cells = monthCells(calendarMonth);
   const cardPadding = 18;
@@ -116,64 +122,65 @@ export function CalendarView({
           ))}
         </View>
 
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap }}>
-          {cells.map((day, index) => {
-            if (!day) return <View key={`empty-${index}`} style={{ width: tile, height: tile }} />;
+        <View style={{ gap, height: tile * 6 + gap * 5 }}>
+          {Array.from({ length: 6 }).map((_, weekIndex) => (
+            <View key={`week-${weekIndex}`} style={{ flexDirection: "row", gap, height: tile }}>
+              {cells.slice(weekIndex * 7, weekIndex * 7 + 7).map((day, dayIndex) => {
+                const cellIndex = weekIndex * 7 + dayIndex;
+                if (!day) return <View key={`empty-${cellIndex}`} style={{ width: tile, height: tile }} />;
 
-            const date = dateForDay(calendarMonth, day);
-            const iso = toISODate(date);
-            const selected = iso === selectedISO;
-            const isToday = iso === todayISO;
-            const hasEntry = Boolean(entriesByDate[iso]?.length);
+                const date = dateForDay(calendarMonth, day);
+                const iso = toISODate(date);
+                const selected = iso === selectedISO;
+                const isToday = iso === todayISO;
+                const dayEntries = entriesByDate[iso] ?? [];
+                const hasEntry = Boolean(dayEntries.length);
 
-            return (
-              <HapticPressable
-                key={iso}
-                haptic={selected ? "light" : "selection"}
-                onPress={() => {
-                  setSelectedDate(date);
-                  setCalendarMonth(date);
-                }}
-                style={{
-                  width: tile,
-                  height: tile,
-                  minWidth: 36,
-                  minHeight: 36,
-                  borderRadius: Math.max(12, tile * 0.3),
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: selected ? colors.accent : hasEntry ? colors.accentSoft : colors.recessed,
-                  borderWidth: isToday && !selected ? 1.5 : 0,
-                  borderColor: colors.accent,
-                }}
-              >
-                <Text
-                  selectable
-                  style={{
-                    color: selected ? colors.raised : colors.text,
-                    fontFamily: monoFont(language),
-                    fontSize: Math.max(13, tile * 0.31),
-                    fontWeight: "900",
-                    fontVariant: ["tabular-nums"],
-                  }}
-                >
-                  {day}
-                </Text>
-                {hasEntry ? (
-                  <View
-                    style={{
-                      position: "absolute",
-                      bottom: Math.max(4, tile * 0.12),
-                      width: 4,
-                      height: 4,
-                      borderRadius: 2,
-                      backgroundColor: selected ? colors.raised : colors.accent,
+                return (
+                  <HapticPressable
+                    key={iso}
+                    haptic={selected ? "light" : "selection"}
+                    onPress={() => {
+                      setSelectedDate(date);
+                      setCalendarMonth(date);
                     }}
-                  />
-                ) : null}
-              </HapticPressable>
-            );
-          })}
+                    style={{
+                      width: tile,
+                      height: tile,
+                      borderRadius: Math.max(12, tile * 0.3),
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: selected ? colors.accent : hasEntry ? colors.accentSoft : colors.recessed,
+                      borderWidth: isToday && !selected ? 1.5 : 0,
+                      borderColor: colors.accent,
+                    }}
+                  >
+                    <Text
+                      selectable
+                      style={{
+                        color: selected ? colors.raised : colors.text,
+                        fontFamily: monoFont(language),
+                        fontSize: Math.max(12, tile * 0.31),
+                        fontWeight: "900",
+                        fontVariant: ["tabular-nums"],
+                      }}
+                    >
+                      {day}
+                    </Text>
+                    {hasEntry ? (
+                      <DayStickerStack
+                        entries={dayEntries}
+                        colors={colors}
+                        size={tile}
+                        droppingEntryId={droppingEntryId}
+                        onDropComplete={onDropComplete}
+                      />
+                    ) : null}
+                  </HapticPressable>
+                );
+              })}
+            </View>
+          ))}
         </View>
       </View>
 
@@ -203,6 +210,116 @@ export function CalendarView({
   );
 }
 
+function DayStickerStack({
+  entries,
+  colors,
+  size,
+  droppingEntryId,
+  onDropComplete,
+}: {
+  entries: BrewEntry[];
+  colors: Palette;
+  size: number;
+  droppingEntryId?: string;
+  onDropComplete: () => void;
+}) {
+  const visible = entries.filter((entry) => entry.stickerUri || entry.photoUri).slice(0, 3);
+  const newest = visible[0];
+  const shouldDrop = Boolean(newest && newest.id === droppingEntryId);
+  const drop = useRef(new Animated.Value(shouldDrop ? -90 : 0)).current;
+
+  useEffect(() => {
+    if (!shouldDrop) return;
+
+    drop.setValue(-90);
+    Animated.spring(drop, {
+      toValue: 0,
+      damping: 9,
+      stiffness: 150,
+      mass: 0.6,
+      useNativeDriver: true,
+    }).start(() => {
+      void playHaptic("success");
+      onDropComplete();
+    });
+  }, [drop, onDropComplete, shouldDrop]);
+
+  if (!newest) {
+    return (
+      <View
+        style={{
+          position: "absolute",
+          bottom: Math.max(4, size * 0.12),
+          width: 4,
+          height: 4,
+          borderRadius: 2,
+          backgroundColor: colors.accent,
+        }}
+      />
+    );
+  }
+
+  return (
+    <View pointerEvents="none" style={{ position: "absolute", left: 4, right: 4, bottom: 3, top: size * 0.38 }}>
+      {visible
+        .slice()
+        .reverse()
+        .map((entry, reverseIndex) => {
+          const visualIndex = visible.length - 1 - reverseIndex;
+          const uri = entry.stickerUri || entry.photoUri;
+          if (!uri) return null;
+          const image = (
+            <View
+              key={entry.id}
+              style={{
+                position: "absolute",
+                left: size * 0.1 + visualIndex * 3,
+                bottom: visualIndex * 3,
+                width: size * 0.42,
+                height: size * 0.42,
+                borderRadius: size * 0.12,
+                padding: 2,
+                backgroundColor: "#FFFFFF",
+                transform: [{ rotate: `${visualIndex % 2 ? 8 : -8}deg` }],
+                boxShadow: `0 2px 5px ${colors.shadow}`,
+              }}
+            >
+              <Image source={{ uri }} contentFit="cover" style={{ flex: 1, borderRadius: size * 0.09 }} />
+            </View>
+          );
+
+          if (entry.id !== droppingEntryId) return image;
+
+          return (
+            <Animated.View key={entry.id} style={{ transform: [{ translateY: drop }] }}>
+              {image}
+            </Animated.View>
+          );
+        })}
+      {entries.length > 1 ? (
+        <View
+          style={{
+            position: "absolute",
+            right: 0,
+            top: -2,
+            minWidth: 19,
+            height: 19,
+            borderRadius: 10,
+            paddingHorizontal: 4,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: colors.accent,
+          }}
+        >
+          <Text selectable style={{ color: colors.raised, fontSize: 11, fontWeight: "900" }}>
+            {entries.length}
+          </Text>
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
 function MonthButton({
   icon,
   colors,
@@ -225,7 +342,7 @@ function MonthButton({
         backgroundColor: colors.recessed,
       }}
     >
-      <Feather name={icon} size={20} color={colors.muted} />
+      <AppIcon name={icon} size={20} color={colors.muted} />
     </HapticPressable>
   );
 }

@@ -11,7 +11,7 @@ export function monthCells(date: Date) {
 
   for (let i = 0; i < firstWeekday; i += 1) cells.push(null);
   for (let day = 1; day <= days; day += 1) cells.push(day);
-  while (cells.length % 7) cells.push(null);
+  while (cells.length < 42) cells.push(null);
 
   return cells;
 }
