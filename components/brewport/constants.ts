@@ -6,7 +6,6 @@ export const storageKeys = {
   entries: "brewport.entries.v2",
   language: "brewport.language.v2",
   theme: "brewport.theme.v2",
-  lastDrop: "brewport.lastDrop.v1",
 };
 
 export const palettes: Record<ThemeName, Palette> = {

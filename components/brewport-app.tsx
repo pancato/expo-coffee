@@ -116,7 +116,7 @@ export function BrewportApp({ view }: { view: ViewName }) {
   const [draft, setDraft] = useState<DraftEntry>(() => emptyDraft());
   const [nearbyShops, setNearbyShops] = useState<ShopCandidate[]>([]);
   const [shopsLoading, setShopsLoading] = useState(false);
-  const [droppingEntryId, setDroppingEntryId] = useState<string | undefined>();
+  const [dropAnimationKey, setDropAnimationKey] = useState(0);
   const [passportCompact, setPassportCompact] = useState(false);
   const autoLocationTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
@@ -124,16 +124,19 @@ export function BrewportApp({ view }: { view: ViewName }) {
   const pendingAddAction = useRef<AddAction | undefined>(undefined);
   const addActionBusy = useRef(false);
   const colors = palettes[theme];
+  const dockBottomOffset = insets.bottom + 26;
+  const scrollBottomInset = dockBottomOffset + 72 + 42;
+  const bottomBlurHeight = Math.max(insets.bottom + 10, 22);
 
   useFocusEffect(
     useCallback(() => {
       setEntries(readStored(storageKeys.entries, seedEntries));
       setLanguage(readStored(storageKeys.language, "en"));
       setTheme(readStored(storageKeys.theme, "crema"));
-      setDroppingEntryId(
-        readStored<string | undefined>(storageKeys.lastDrop, undefined),
-      );
-    }, []),
+      if (view === "journal") {
+        setDropAnimationKey((key) => key + 1);
+      }
+    }, [view]),
   );
 
   useEffect(() => {
@@ -300,7 +303,7 @@ export function BrewportApp({ view }: { view: ViewName }) {
         allowsEditing: false,
         quality: 0.92,
       });
-    } catch (error) {
+    } catch {
 
       Alert.alert(i18n[language].permission, i18n[language].cameraPermission);
       return;
@@ -332,7 +335,7 @@ export function BrewportApp({ view }: { view: ViewName }) {
         allowsEditing: false,
         quality: 0.92,
       });
-    } catch (error) {
+    } catch {
 
       Alert.alert(i18n[language].permission, i18n[language].galleryPermission);
       return;
@@ -371,8 +374,7 @@ export function BrewportApp({ view }: { view: ViewName }) {
     };
 
     persist([next, ...entries]);
-    setDroppingEntryId(next.id);
-    writeStored(storageKeys.lastDrop, next.id);
+    setDropAnimationKey((key) => key + 1);
     setEditorOpen(false);
     router.push("/journal");
   }
@@ -390,7 +392,7 @@ export function BrewportApp({ view }: { view: ViewName }) {
             width: screenWidth,
             alignSelf: "center",
             paddingTop: Math.max(2, insets.top - 6),
-            paddingBottom: insets.bottom + 22,
+            paddingBottom: 0,
           }}
         >
           <Header
@@ -413,11 +415,8 @@ export function BrewportApp({ view }: { view: ViewName }) {
                 language={language}
                 colors={colors}
                 width={contentWidth}
-                droppingEntryId={droppingEntryId}
-                onDropComplete={() => {
-                  setDroppingEntryId(undefined);
-                  localStorage.removeItem(storageKeys.lastDrop);
-                }}
+                bottomInset={scrollBottomInset}
+                dropAnimationKey={dropAnimationKey}
               />
             ) : (
               <PassportView
@@ -425,6 +424,7 @@ export function BrewportApp({ view }: { view: ViewName }) {
                 language={language}
                 colors={colors}
                 compact={passportCompact}
+                bottomInset={scrollBottomInset}
               />
             )}
           </View>
@@ -435,7 +435,8 @@ export function BrewportApp({ view }: { view: ViewName }) {
             }
             onAdd={() => setAddOpen(true)}
             colors={colors}
-            bottomOffset={insets.bottom + 26}
+            bottomOffset={dockBottomOffset}
+            bottomBlurHeight={bottomBlurHeight}
           />
         </View>
 

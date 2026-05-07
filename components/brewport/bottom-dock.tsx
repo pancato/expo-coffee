@@ -1,3 +1,4 @@
+import { BlurView } from "expo-blur";
 import { View } from "react-native";
 
 import { AppIcon } from "./icons";
@@ -10,12 +11,14 @@ export function BottomDock({
   onAdd,
   colors,
   bottomOffset,
+  bottomBlurHeight,
 }: {
   view: ViewName;
   onNavigate: (view: ViewName) => void;
   onAdd: () => void;
   colors: Palette;
   bottomOffset: number;
+  bottomBlurHeight: number;
 }) {
   return (
     <View
@@ -24,11 +27,34 @@ export function BottomDock({
         position: "absolute",
         left: 0,
         right: 0,
-        bottom: bottomOffset,
+        bottom: 0,
+        height: bottomOffset + 84,
         alignItems: "center",
       }}
     >
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 24 }}>
+      <BlurView
+        pointerEvents="none"
+        intensity={76}
+        tint="systemUltraThinMaterial"
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: bottomBlurHeight,
+          overflow: "hidden",
+          backgroundColor: "rgba(255,253,247,0.14)",
+        }}
+      />
+      <View
+        style={{
+          position: "absolute",
+          bottom: bottomOffset,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 24,
+        }}
+      >
         <View
           style={{
             width: 214,

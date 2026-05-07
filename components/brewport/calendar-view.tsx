@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, ScrollView, Text, View } from "react-native";
 import { Image } from "expo-image";
 
@@ -20,8 +20,8 @@ export function CalendarView({
   language,
   colors,
   width,
-  droppingEntryId,
-  onDropComplete,
+  bottomInset,
+  dropAnimationKey,
 }: {
   entries: BrewEntry[];
   calendarMonth: Date;
@@ -31,8 +31,8 @@ export function CalendarView({
   language: Language;
   colors: Palette;
   width: number;
-  droppingEntryId?: string;
-  onDropComplete: () => void;
+  bottomInset: number;
+  dropAnimationKey: number;
 }) {
   const cells = monthCells(calendarMonth);
   const cardPadding = 18;
@@ -47,12 +47,38 @@ export function CalendarView({
     }, {});
   }, [entries]);
   const selectedEntries = entriesByDate[selectedISO] ?? [];
+  const hasVisibleSticker = cells.some((day) => {
+    if (!day) return false;
+    const iso = toISODate(dateForDay(calendarMonth, day));
+    return (entriesByDate[iso] ?? []).some(
+      (entry) => entry.stickerUri || entry.photoUri,
+    );
+  });
+  const [activeDropKey, setActiveDropKey] = useState(0);
+
+  useEffect(() => {
+    if (!dropAnimationKey || !hasVisibleSticker) return;
+
+    setActiveDropKey(dropAnimationKey);
+    const clearTimer = setTimeout(() => {
+      setActiveDropKey(0);
+    }, 1550);
+
+    return () => {
+      clearTimeout(clearTimer);
+    };
+  }, [dropAnimationKey, hasVisibleSticker]);
 
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 4, paddingBottom: 142, gap: 22 }}
+      contentContainerStyle={{
+        paddingHorizontal: 20,
+        paddingTop: 4,
+        paddingBottom: bottomInset,
+        gap: 22,
+      }}
     >
       <View
         style={{
@@ -177,8 +203,7 @@ export function CalendarView({
                         entries={dayEntries}
                         colors={colors}
                         size={tile}
-                        droppingEntryId={droppingEntryId}
-                        onDropComplete={onDropComplete}
+                        activeDropKey={activeDropKey}
                       />
                     ) : null}
                   </HapticPressable>
@@ -219,19 +244,17 @@ function DayStickerStack({
   entries,
   colors,
   size,
-  droppingEntryId,
-  onDropComplete,
+  activeDropKey,
 }: {
   entries: BrewEntry[];
   colors: Palette;
   size: number;
-  droppingEntryId?: string;
-  onDropComplete: () => void;
+  activeDropKey: number;
 }) {
-  const visible = useMemo(() => entries.filter((entry) => entry.stickerUri || entry.photoUri).slice(0, 3), [entries]);
+  const visible = useMemo(() => entries.filter((entry) => entry.stickerUri || entry.photoUri).slice(0, 4), [entries]);
   const visibleKey = useMemo(() => visible.map((entry) => entry.id).join("|"), [visible]);
   const newest = visible[0];
-  const shouldDrop = Boolean(droppingEntryId && visible.some((entry) => entry.id === droppingEntryId));
+  const shouldDrop = Boolean(activeDropKey && visible.length);
   const drops = useRef<Animated.Value[]>([]);
 
   if (drops.current.length !== visible.length) {
@@ -242,22 +265,27 @@ function DayStickerStack({
     if (!shouldDrop) return;
 
     drops.current.forEach((drop, index) => drop.setValue(-150 - index * 34));
-    Animated.stagger(
-      120,
-      drops.current.map((drop) =>
+    const timers = drops.current.map((drop, index) =>
+      setTimeout(() => {
         Animated.spring(drop, {
           toValue: 0,
           damping: 9,
           stiffness: 148,
           mass: 0.62,
           useNativeDriver: true,
-        }),
-      ),
-    ).start(() => {
-      void playHaptic("success");
-      onDropComplete();
-    });
-  }, [onDropComplete, shouldDrop, visibleKey]);
+        }).start(({ finished }) => {
+          if (finished) {
+            void playHaptic("light");
+          }
+        });
+      }, index * 120),
+    );
+
+    return () => {
+      timers.forEach(clearTimeout);
+      drops.current.forEach((drop) => drop.stopAnimation());
+    };
+  }, [activeDropKey, shouldDrop, visibleKey]);
 
   if (!newest) {
     return (
@@ -283,7 +311,7 @@ function DayStickerStack({
           const visualIndex = visible.length - 1 - reverseIndex;
           const uri = entry.stickerUri || entry.photoUri;
           if (!uri) return null;
-          const stickerSize = size * 0.42;
+          const stickerSize = size * (visible.length > 3 ? 0.38 : 0.42);
           const drop = drops.current[visualIndex] ?? new Animated.Value(0);
 
           return (
@@ -291,8 +319,8 @@ function DayStickerStack({
               key={entry.id}
               style={{
                 position: "absolute",
-                left: size * 0.11 + visualIndex * 3,
-                bottom: size * 0.08 + visualIndex * 3,
+                left: size * 0.1 + visualIndex * 2.7,
+                bottom: size * 0.08 + visualIndex * 2.7,
                 width: stickerSize,
                 height: stickerSize,
                 transform: [{ translateY: shouldDrop ? drop : 0 }, { rotate: `${visualIndex % 2 ? 8 : -8}deg` }],

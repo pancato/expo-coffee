@@ -11,11 +11,13 @@ export function PassportView({
   language,
   colors,
   compact,
+  bottomInset,
 }: {
   entries: BrewEntry[];
   language: Language;
   colors: Palette;
   compact: boolean;
+  bottomInset: number;
 }) {
   const shops = unique(entries.map((entry) => entry.shop));
   const cities = unique(entries.map((entry) => entry.city));
@@ -29,7 +31,7 @@ export function PassportView({
       contentContainerStyle={{
         paddingHorizontal: 20,
         paddingTop: 4,
-        paddingBottom: 142,
+        paddingBottom: bottomInset,
         gap: 22,
       }}
     >
